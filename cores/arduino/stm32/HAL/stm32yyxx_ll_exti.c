@@ -4,10 +4,10 @@
 #include "stm32f0xx_ll_exti.c"
 #endif
 #ifdef STM32F1xx
-// none
+#include "stm32f1xx_ll_exti.c"
 #endif
 #ifdef STM32F2xx
-// none
+#include "stm32f2xx_ll_exti.c"
 #endif
 #ifdef STM32F3xx
 #include "stm32f3xx_ll_exti.c"

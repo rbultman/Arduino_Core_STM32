@@ -38,11 +38,11 @@ extern "C" {
  *     [3]  Output Push-Pull / Open Drain (as in OTYPER reg)
  *   [5:4]  as in PUPDR reg: No Pull, Pull-up, Pull-Donc
  *   [7:6]  Reserved for speed config (as in OSPEEDR), but not used yet
- *  [11:8]  Alternate Num (as in AFRL/AFRG reg)
- * [16:12]  Channel (Analog/Timer specific)
- *    [17]  Inverted (Analog/Timer specific)
- *    [18]  Analog ADC control - Only valid for specific families
- * [32:19]  Reserved
+ *  [14:8]  Alternate Num (as in AFRL/AFRG reg)
+ * [19:15]  Channel (Analog/Timer specific)
+ *    [20]  Inverted (Analog/Timer specific)
+ *    [21]  Analog ADC control - Only valid for specific families
+ * [32:22]  Reserved
  */
 
 #define STM_PIN_FUNCTION_MASK 0x07
@@ -61,20 +61,20 @@ extern "C" {
 #define STM_PIN_SPEED_SHIFT 6
 #define STM_PIN_SPEED_BITS (STM_PIN_SPEED_MASK << STM_PIN_SPEED_SHIFT)
 
-#define STM_PIN_AFNUM_MASK 0x0F
+#define STM_PIN_AFNUM_MASK 0x7F
 #define STM_PIN_AFNUM_SHIFT 8
 #define STM_PIN_AFNUM_BITS (STM_PIN_AFNUM_MASK << STM_PIN_AFNUM_SHIFT)
 
 #define STM_PIN_CHAN_MASK 0x1F
-#define STM_PIN_CHAN_SHIFT 12
+#define STM_PIN_CHAN_SHIFT 15
 #define STM_PIN_CHANNEL_BIT (STM_PIN_CHAN_MASK << STM_PIN_CHAN_SHIFT)
 
 #define STM_PIN_INV_MASK 0x01
-#define STM_PIN_INV_SHIFT 17
+#define STM_PIN_INV_SHIFT 20
 #define STM_PIN_INV_BIT (STM_PIN_INV_MASK << STM_PIN_INV_SHIFT)
 
 #define STM_PIN_AN_CTRL_MASK 0x01
-#define STM_PIN_AN_CTRL_SHIFT 18
+#define STM_PIN_AN_CTRL_SHIFT 21
 #define STM_PIN_ANALOG_CONTROL_BIT (STM_PIN_AN_CTRL_MASK << STM_PIN_AN_CTRL_SHIFT)
 
 #define STM_PIN_FUNCTION(X)         (((X) >> STM_PIN_FUNCTION_SHIFT) & STM_PIN_FUNCTION_MASK)
@@ -129,7 +129,10 @@ typedef enum {
 #define STM_PORT(X) (((uint32_t)(X) >> 4) & 0xF)
 #define STM_PIN(X)  ((uint32_t)(X) & 0xF)
 // Check PinName is valid: FirstPort <= PortName <= LastPort
-#define STM_VALID_PINNAME(X) ((STM_PORT(X) >= FirstPort) && (STM_PORT(X) <= LastPort))
+// As FirstPort is equal to 0 and STM_PORT cast as an unsigned
+// (STM_PORT(X) >= FirstPort)  is always true
+//#define STM_VALID_PINNAME(X) ((STM_PORT(X) >= FirstPort) && (STM_PORT(X) <= LastPort))
+#define STM_VALID_PINNAME(X) (STM_PORT(X) <= LastPort)
 
 #define STM_GPIO_PIN(X) ((uint16_t)(1<<STM_PIN(X)))
 /*  Defines to be used by application */

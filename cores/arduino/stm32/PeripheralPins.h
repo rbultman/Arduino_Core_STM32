@@ -32,6 +32,9 @@
 #define _PERIPHERALPINS_H
 
 #include "pinmap.h"
+#ifdef STM32F1xx
+#include "PinAF_STM32F1.h"
+#endif
 
 //*** ADC ***
 extern const PinMap PinMap_ADC[];
@@ -62,8 +65,11 @@ extern const PinMap PinMap_SPI_SSEL[];
 extern const PinMap PinMap_CAN_RD[];
 extern const PinMap PinMap_CAN_TD[];
 
-//*** TIMER ***
-extern const TimerMap TimerMap_CONFIG[];
+//*** ETHERNET ***
+extern const PinMap PinMap_Ethernet[];
+
+//*** QUADSPI ***
+extern const PinMap PinMap_QUADSPI[];
 
 #endif
 

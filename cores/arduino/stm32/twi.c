@@ -47,10 +47,9 @@
 /** @addtogroup STM32F4xx_System_Private_Includes
   * @{
   */
-
 #include "stm32_def.h"
-#include "hw_config.h"
 #include "twi.h"
+#include "PinAF_STM32F1.h"
 
 /**
   * @}
@@ -143,6 +142,7 @@ void i2c_init(i2c_t *obj)
   */
 void i2c_custom_init(i2c_t *obj, i2c_timing_e timing, uint32_t addressingMode, uint32_t ownAddress, uint8_t master)
 {
+  UNUSED(master);
   if(obj == NULL)
     return;
 
@@ -151,12 +151,18 @@ void i2c_custom_init(i2c_t *obj, i2c_timing_e timing, uint32_t addressingMode, u
   I2C_HandleTypeDef *handle = &(obj->handle);
 
   // Determine the I2C to use
-  uint32_t i2c_sda = pinmap_peripheral(obj->sda, PinMap_I2C_SDA);
-  uint32_t i2c_scl = pinmap_peripheral(obj->scl, PinMap_I2C_SCL);
+  I2C_TypeDef *i2c_sda = pinmap_peripheral(obj->sda, PinMap_I2C_SDA);
+  I2C_TypeDef *i2c_scl = pinmap_peripheral(obj->scl, PinMap_I2C_SCL);
 
-  obj->i2c = (I2C_TypeDef *)pinmap_merge(i2c_sda, i2c_scl);
+  //Pins SDA/SCL must not be NP
+  if(i2c_sda == NP || i2c_scl == NP) {
+    printf("ERROR: at least one I2C pin has no peripheral\n");
+    return;
+  }
 
-  if(obj->i2c == (I2C_TypeDef *)NC) {
+  obj->i2c = pinmap_merge_peripheral(i2c_sda, i2c_scl);
+
+  if(obj->i2c == NP) {
     printf("ERROR: I2C pins mismatch\n");
     return;
   }
@@ -168,6 +174,9 @@ void i2c_custom_init(i2c_t *obj, i2c_timing_e timing, uint32_t addressingMode, u
       __HAL_RCC_I2C1_FORCE_RESET();
       __HAL_RCC_I2C1_RELEASE_RESET();
       obj->irq = I2C1_EV_IRQn;
+#ifdef STM32F1xx
+      obj->irqER = I2C1_ER_IRQn;
+#endif
       i2c_handles[0] = handle;
   }
 #endif
@@ -181,6 +190,9 @@ void i2c_custom_init(i2c_t *obj, i2c_timing_e timing, uint32_t addressingMode, u
       obj->irq = I2C2_IRQn;
 #else
       obj->irq = I2C2_EV_IRQn;
+#ifdef STM32F1xx
+      obj->irqER = I2C2_ER_IRQn;
+#endif
 #endif
       i2c_handles[1] = handle;
   }
@@ -212,7 +224,11 @@ void i2c_custom_init(i2c_t *obj, i2c_timing_e timing, uint32_t addressingMode, u
   GPIO_InitStruct.Mode        = STM_PIN_MODE(pinmap_function(obj->scl,PinMap_I2C_SCL));
   GPIO_InitStruct.Speed       = GPIO_SPEED_FREQ_HIGH;
   GPIO_InitStruct.Pull        = STM_PIN_PUPD(pinmap_function(obj->scl,PinMap_I2C_SCL));
+#ifdef STM32F1xx
+  pin_SetF1AFPin(STM_PIN_AFNUM(pinmap_function(obj->scl,PinMap_I2C_SCL)));
+#else
   GPIO_InitStruct.Alternate   = STM_PIN_AFNUM(pinmap_function(obj->scl,PinMap_I2C_SCL));
+#endif /* STM32F1xx */
   HAL_GPIO_Init(port, &GPIO_InitStruct);
 
   //SDA
@@ -221,7 +237,11 @@ void i2c_custom_init(i2c_t *obj, i2c_timing_e timing, uint32_t addressingMode, u
   GPIO_InitStruct.Mode        = STM_PIN_MODE(pinmap_function(obj->sda,PinMap_I2C_SDA));
   GPIO_InitStruct.Speed       = GPIO_SPEED_FREQ_HIGH;
   GPIO_InitStruct.Pull        = STM_PIN_PUPD(pinmap_function(obj->sda,PinMap_I2C_SDA));
+#ifdef STM32F1xx
+  pin_SetF1AFPin(STM_PIN_AFNUM(pinmap_function(obj->sda,PinMap_I2C_SDA)));
+#else
   GPIO_InitStruct.Alternate   = STM_PIN_AFNUM(pinmap_function(obj->sda,PinMap_I2C_SDA));
+#endif /* STM32F1xx */
   HAL_GPIO_Init(port, &GPIO_InitStruct);
 
   handle->Instance             = obj->i2c;
@@ -235,13 +255,19 @@ void i2c_custom_init(i2c_t *obj, i2c_timing_e timing, uint32_t addressingMode, u
   handle->Init.OwnAddress1     = ownAddress;
   handle->Init.OwnAddress2     = 0xFF;
   handle->Init.AddressingMode  = addressingMode;
-  handle->Init.DualAddressMode = I2C_DUALADDRESS_DISABLED;
-  handle->Init.GeneralCallMode = I2C_GENERALCALL_DISABLED;
-  handle->Init.NoStretchMode   = I2C_NOSTRETCH_DISABLED;
+  handle->Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  handle->Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  handle->Init.NoStretchMode   = I2C_NOSTRETCH_DISABLE;
+
+  handle->State = HAL_I2C_STATE_RESET;
 
   if(master == 0) {
     HAL_NVIC_SetPriority(obj->irq, 0, 1);
     HAL_NVIC_EnableIRQ(obj->irq);
+#ifdef STM32F1xx
+    HAL_NVIC_SetPriority(obj->irqER, 0, 1);
+    HAL_NVIC_EnableIRQ(obj->irqER);
+#endif
   }
 
   // Init the I2C
@@ -256,6 +282,9 @@ void i2c_custom_init(i2c_t *obj, i2c_timing_e timing, uint32_t addressingMode, u
 void i2c_deinit(i2c_t *obj)
 {
   HAL_NVIC_DisableIRQ(obj->irq);
+#ifdef STM32F1xx
+  HAL_NVIC_DisableIRQ(obj->irqER);
+#endif
   HAL_I2C_DeInit(&(obj->handle));
 }
 
@@ -402,6 +431,9 @@ i2c_t *get_i2c_obj(I2C_HandleTypeDef *hi2c){
   */
 void i2c_attachSlaveRxEvent(i2c_t *obj, void (*function)(uint8_t*, int) )
 {
+  if((obj == NULL) || (function == NULL))
+    return;
+
   obj->i2c_onSlaveReceive = function;
   HAL_I2C_EnableListen_IT(&(obj->handle));
 }
@@ -413,6 +445,9 @@ void i2c_attachSlaveRxEvent(i2c_t *obj, void (*function)(uint8_t*, int) )
   */
 void i2c_attachSlaveTxEvent(i2c_t *obj, void (*function)(void) )
 {
+  if((obj == NULL) || (function == NULL))
+    return;
+
   obj->i2c_onSlaveTransmit = function;
   HAL_I2C_EnableListen_IT(&(obj->handle));
 }

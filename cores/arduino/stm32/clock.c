@@ -47,7 +47,6 @@
   * @{
   */
 #include "stm32_def.h"
-#include "hw_config.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -134,6 +133,7 @@ uint32_t GetCurrentMilli(void)
 void SysTick_Handler(void)
 {
   HAL_IncTick();
+  HAL_SYSTICK_IRQHandler();
 }
 
 /**

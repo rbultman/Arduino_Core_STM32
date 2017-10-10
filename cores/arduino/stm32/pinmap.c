@@ -17,24 +17,42 @@
 
 #include "pinmap.h"
 
-uint32_t pinmap_find_peripheral(PinName pin, const PinMap* map) {
+void* pinmap_find_peripheral(PinName pin, const PinMap* map) {
   while (map->pin != NC) {
     if (map->pin == pin)
       return map->peripheral;
     map++;
   }
-  return (uint32_t)NC;
+  return NP;
 }
 
-uint32_t pinmap_peripheral(PinName pin, const PinMap* map) {
-  uint32_t peripheral = (uint32_t)NC;
+void* pinmap_peripheral(PinName pin, const PinMap* map) {
+  void* peripheral = NP;
 
-  if (pin == (PinName)NC)
-      return (uint32_t)NC;
-  peripheral = pinmap_find_peripheral(pin, map);
-  //if ((uint32_t)NC == peripheral) // no mapping available
-  //    error("pinmap not found for peripheral");
+  if (pin != (PinName)NC) {
+    peripheral = pinmap_find_peripheral(pin, map);
+  }
+  // else error("pinmap not found for peripheral");
   return peripheral;
+}
+
+PinName pinmap_find_pin(void* peripheral, const PinMap* map) {
+  while (map->peripheral != NP) {
+    if (map->peripheral == peripheral)
+      return map->pin;
+    map++;
+  }
+  return NC;
+}
+
+PinName pinmap_pin(void* peripheral, const PinMap* map) {
+  PinName pin = NC;
+
+  if (peripheral != NP) {
+    pin = pinmap_find_pin(peripheral, map);
+  }
+  // else error("pinmap not found for pin");
+  return pin;
 }
 
 uint32_t pinmap_find_function(PinName pin, const PinMap* map) {
@@ -49,11 +67,10 @@ uint32_t pinmap_find_function(PinName pin, const PinMap* map) {
 uint32_t pinmap_function(PinName pin, const PinMap* map) {
   uint32_t function = (uint32_t)NC;
 
-  if (pin == (PinName)NC)
-    return (uint32_t)NC;
-  function = pinmap_find_function(pin, map);
-  //if ((uint32_t)NC == function) // no mapping available
-  //    error("pinmap not found for function");
+  if (pin != (PinName)NC) {
+    function = pinmap_find_function(pin, map);
+  }
+  // else error("pinmap not found for function");
   return function;
 }
 
@@ -68,36 +85,27 @@ bool pin_in_pinmap(PinName pin, const PinMap* map) {
   return false;
 }
 
-uint32_t pinmap_merge(uint32_t a, uint32_t b) {
-    // both are the same (inc both NC)
+// Merge peripherals
+void* pinmap_merge_peripheral(void* a, void* b) {
+    // both are the same (inc both NP)
     if (a == b)
         return a;
 
-    // one (or both) is not connected
-    if (a == (uint32_t)NC)
+    // one (or both) is not set
+    if (a == NP)
         return b;
-    if (b == (uint32_t)NC)
+    if (b == NP)
         return a;
 
     // mis-match error case
     // error("pinmap mis-match");
-    return (uint32_t)NC;
+    return NP;
 }
 
-uint32_t timermap_irq(TIM_TypeDef *tim, const TimerMap* map) {
-  while (map->timer != NULL) {
-    if (map->timer == tim)
-      return map->irq;
-    map++;
+PinName pin_pinName(const PinMap* map) {
+  if(map->pin != (PinName)NC) {
+    return map->pin;
+  } else {
+    return (PinName)NC;
   }
-  return (uint32_t)0;
-}
-
-uint32_t timermap_clkSrc(TIM_TypeDef *tim, const TimerMap* map) {
-  while (map->timer != NULL) {
-    if (map->timer == tim)
-      return map->clk_src;
-    map++;
-  }
-  return (uint32_t)0;
 }

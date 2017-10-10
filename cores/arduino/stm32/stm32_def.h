@@ -36,6 +36,10 @@
 #include "stm32f4xx.h"
 #elif defined(STM32F7xx)
 #include "stm32f7xx.h"
+// On other HAL series, stm32[fl]yxx.h include
+// stm32[fl]yxx_hal.h which include stm32[fl]yxx_hal_conf.h
+// For F7, stm32f7xx_hal.h replaced by stm32f7xx_hal_conf.h
+#include "stm32f7xx_hal.h"
 #elif defined(STM32L0xx)
 #include "stm32l0xx.h"
 #elif defined(STM32L1xx)
@@ -48,8 +52,6 @@
 
 // Here define some compatibility
 #ifdef STM32F0xx
-#define USART3_IRQn                      USART3_8_IRQn
-#define USART6_IRQn                      USART3_8_IRQn
 #define I2C1_EV_IRQn                     I2C1_IRQn
 
 #elif defined(STM32F1xx)
@@ -70,7 +72,17 @@
 #elif defined(STM32L4xx)
 #endif
 
+#ifndef CAN1
+#define CAN1 CAN
+#endif
+
+#ifdef __cplusplus
+extern "C"{
+#endif // __cplusplus
 // weaked functions declaration
 void SystemClock_Config(void);
+#ifdef __cplusplus
+} // extern "C"
+#endif // __cplusplus
 
 #endif //_STM32_DEF_

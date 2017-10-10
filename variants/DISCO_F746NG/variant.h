@@ -20,44 +20,47 @@
 #define _VARIANT_ARDUINO_STM32_
 
 /*----------------------------------------------------------------------------
- *        Definitions
- *----------------------------------------------------------------------------*/
-
-/** Frequency of the board main oscillator */
-//#define VARIANT_MAINOSC		12000000
-
-/** Master clock frequency */
-//#define VARIANT_MCK			84000000
-
-/*----------------------------------------------------------------------------
  *        Headers
  *----------------------------------------------------------------------------*/
 
-#include "Arduino.h"
+#include "pins_arduino.h"
 
 #ifdef __cplusplus
 extern "C"{
 #endif // __cplusplus
 
-/**
- * Libc porting layers
- */
-#if defined (  __GNUC__  ) /* GCC CS3 */
-#    include <syscalls.h> /** RedHat Newlib minimal stub */
-#endif
-
 /*----------------------------------------------------------------------------
  *        Pins
  *----------------------------------------------------------------------------*/
-#include "PeripheralPins.h"
-
-extern const PinName digital_arduino[];
+extern const PinName digitalPin[];
 
 enum {
-  D0,  D1,  D2,  D3,  D4,  D5,  D6,  D7,  D8,  D9,
-  D10, D11, D12, D13, D14, D15, D16, D17, D18, D19,
-  D20, D21, D22,
-  DEND
+  PC7,  //D0
+  PC6,  //D1
+  PG6,  //D2
+  PB4,  //D3
+  PG7,  //D4
+  PI0,  //D5
+  PH6,  //D6
+  PI3,  //D7
+  PI2,  //D8
+  PA15, //D9
+  PA8,  //D10
+  PB15, //D11
+  PB14, //D12
+  PI1,  //D13
+  PB9,  //D14
+  PB8,  //D15
+  PA0,  //D16/A0
+  PF10, //D17/A1
+  PF9,  //D18/A2
+  PF8,  //D19/A3
+  PF7,  //D20/A4
+  PF6,  //D21/A5
+  PI11, //D22 User btn
+  PB7,  //D23 ST-Link Rx
+  PA9,  //D24 ST-Link Tx
+  PEND
 };
 
 enum {
@@ -65,23 +68,6 @@ enum {
   A0,  A1,  A2,  A3,  A4,  A5,
   AEND
 };
-
-#define MAX_ANALOG_IOS          (sizeof(PinMap_ADC)/sizeof(PinMap))
-#define MAX_DIGITAL_IOS         DEND
-#define NUM_DIGITAL_PINS        MAX_DIGITAL_IOS
-#define NUM_ANALOG_INPUTS       (AEND - A0)
-
-// Convert a digital pin number Dxx to a PinName Pxy
-#define digitalToPinName(p)     ((p < NUM_DIGITAL_PINS) ? digital_arduino[p] : (STM_VALID_PINNAME(p))? (PinName)p : NC)
-// Convert an analog pin number Axx to a PinName Pxy
-#define analogToPinName(p)      (digitalToPinName(p))
-// Convert an analog pin number to a digital pin number
-#define analogToDigital(p)      (p)
-// Convert a PinName Pxy to a pin number
-uint32_t pinNametoPinNumber(PinName p);
-
-#define digitalPinToPort(p)     ( get_GPIO_Port(digitalToPinName(p)) )
-#define digitalPinToBitMask(p)  ( STM_GPIO_PIN(digitalToPinName(p)) )
 
 //ADC resolution is 12bits
 #define ADC_RESOLUTION          12
@@ -101,23 +87,13 @@ uint32_t pinNametoPinNumber(PinName p);
 
 
 //SPI definitions
-//define 16 channels. As many channel as digital IOs
-#define SPI_CHANNELS_NUM        16
-
-//default chip salect pin
-#define BOARD_SPI_DEFAULT_SS    10
-
-//In case SPI CS channel is not used we define a default one
-#define BOARD_SPI_OWN_SS        SPI_CHANNELS_NUM
-
-#define SS                      BOARD_SPI_DEFAULT_SS
+#define SS                      10
 #define SS1                     4
 #define SS2                     7
 #define SS3                     8
 #define MOSI                    11
 #define MISO                    12
-#define SCLK                    13
-#define SCK                     SCLK
+#define SCK                     13
 
 //I2C Definitions
 #define SDA                     14
@@ -131,14 +107,12 @@ uint32_t pinNametoPinNumber(PinName p);
 //Do not use basic timer: OC is required
 #define TIMER_SERVO             TIM2  //TODO: advanced-control timers don't work
 
-#define DEBUG_UART              ((USART_TypeDef *) USART1)
-
-// UART Emulation
-//#define UART_EMUL_RX            PYxx
-//#define UART_EMUL_TX            PYxx
-
-//Enable Firmata
-#define STM32 1
+// UART Definitions
+#define SERIAL_UART_INSTANCE    1 //Connected to ST-Link
+// Default pin used for 'Serial' instance (ex: ST-Link)
+// Mandatory for Firmata
+#define PIN_SERIAL_RX           PB7
+#define PIN_SERIAL_TX           PA9
 
 #ifdef __cplusplus
 } // extern "C"
@@ -148,10 +122,6 @@ uint32_t pinNametoPinNumber(PinName p);
  *----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
-extern HardwareSerial Serial;
-extern HardwareSerial Serial1;
-extern HardwareSerial Serial2;
-
 // These serial port names are intended to allow libraries and architecture-neutral
 // sketches to automatically default to the correct port name for a particular type
 // of use.  For example, a GPS module would normally connect to SERIAL_PORT_HARDWARE_OPEN,
@@ -167,8 +137,8 @@ extern HardwareSerial Serial2;
 //
 // SERIAL_PORT_HARDWARE_OPEN  Hardware serial ports which are open for use.  Their RX & TX
 //                            pins are NOT connected to anything by default.
-#define SERIAL_PORT_MONITOR   Serial
-#define SERIAL_PORT_HARDWARE  Serial
+#define SERIAL_PORT_MONITOR     Serial
+#define SERIAL_PORT_HARDWARE    Serial
 #endif
 
 #endif /* _VARIANT_ARDUINO_STM32_ */

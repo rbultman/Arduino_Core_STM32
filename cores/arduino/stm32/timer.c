@@ -46,13 +46,8 @@
 /** @addtogroup STM32F4xx_System_Private_Includes
   * @{
   */
-#include "stm32_def.h"
-#include "hw_config.h"
 #include "timer.h"
-#include "digital_io.h"
-#include "clock.h"
-#include "analog.h"
-#include "variant.h"
+#include "board.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -218,6 +213,18 @@ void timer_enable_clock(TIM_HandleTypeDef *htim)
       timer_handles[16] = htim;
   }
 #endif
+#if defined(TIM18_BASE)
+  if (htim->Instance == TIM18) {
+      __HAL_RCC_TIM18_CLK_ENABLE();
+      timer_handles[17] = htim;
+  }
+#endif
+#if defined(TIM19_BASE)
+  if (htim->Instance == TIM19) {
+      __HAL_RCC_TIM19_CLK_ENABLE();
+      timer_handles[18] = htim;
+  }
+#endif
 #if defined(TIM20_BASE)
   if (htim->Instance == TIM20) {
       __HAL_RCC_TIM20_CLK_ENABLE();
@@ -331,6 +338,16 @@ void timer_disable_clock(TIM_HandleTypeDef *htim)
       __HAL_RCC_TIM17_CLK_DISABLE();
   }
 #endif
+#if defined(TIM18_BASE)
+  if (htim->Instance == TIM18) {
+      __HAL_RCC_TIM18_CLK_DISABLE();
+  }
+#endif
+#if defined(TIM19_BASE)
+  if (htim->Instance == TIM19) {
+      __HAL_RCC_TIM19_CLK_DISABLE();
+  }
+#endif
 #if defined(TIM20_BASE)
   if (htim->Instance == TIM20) {
       __HAL_RCC_TIM20_CLK_DISABLE();
@@ -357,8 +374,8 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim_base)
 {
   timer_enable_clock(htim_base);
 
-  HAL_NVIC_SetPriority(timermap_irq(htim_base->Instance, TimerMap_CONFIG), 15 ,0);
-  HAL_NVIC_EnableIRQ(timermap_irq(htim_base->Instance, TimerMap_CONFIG));
+  HAL_NVIC_SetPriority(getTimerIrq(htim_base->Instance), 15 ,0);
+  HAL_NVIC_EnableIRQ(getTimerIrq(htim_base->Instance));
 }
 
 /**
@@ -369,7 +386,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim_base)
 void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *htim_base)
 {
   timer_disable_clock(htim_base);
-  HAL_NVIC_DisableIRQ(timermap_irq(htim_base->Instance, TimerMap_CONFIG));
+  HAL_NVIC_DisableIRQ(getTimerIrq(htim_base->Instance));
 }
 
 /**
@@ -391,7 +408,7 @@ void TimerHandleInit(stimer_t *obj, uint16_t period, uint16_t prescaler)
   handle->Init.CounterMode       = TIM_COUNTERMODE_UP;
   handle->Init.Period            = period;
   handle->Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
-#ifndef STM32L0xx
+#if !defined(STM32L0xx) && !defined(STM32L1xx)
   handle->Init.RepetitionCounter = 0x0000;
 #endif
   if(HAL_TIM_Base_Init(handle) != HAL_OK){
@@ -401,6 +418,137 @@ void TimerHandleInit(stimer_t *obj, uint16_t period, uint16_t prescaler)
   if(HAL_TIM_Base_Start_IT(handle) != HAL_OK){
     return;
   }
+}
+
+/**
+  * @brief  This function return the timer clock source.
+  * @param  tim: timer instance
+  * @retval 1 = PCLK1 or 2 = PCLK2 or 0 = unknown
+  */
+uint32_t getTimerIrq(TIM_TypeDef* tim)
+{
+  uint32_t IRQn = 0;
+
+  if(tim != (TIM_TypeDef *)NC) {
+    /* Get IRQn depending on TIM instance */
+    switch ((uint32_t)tim) {
+#if defined(TIM1_BASE)
+       case (uint32_t)TIM1:
+         IRQn = TIM1_IRQn;
+         break;
+#endif
+#if defined(TIM2_BASE)
+       case (uint32_t)TIM2:
+         IRQn = TIM2_IRQn;
+         break;
+#endif
+#if defined(TIM3_BASE)
+       case (uint32_t)TIM3:
+         IRQn = TIM3_IRQn;
+         break;
+#endif
+#if defined(TIM4_BASE)
+       case (uint32_t)TIM4:
+         IRQn = TIM4_IRQn;
+         break;
+#endif
+#if defined(TIM5_BASE)
+       case (uint32_t)TIM5:
+         IRQn = TIM5_IRQn;
+         break;
+#endif
+#if defined(TIM6_BASE)
+       case (uint32_t)TIM6:
+         IRQn = TIM6_IRQn;
+         break;
+#endif
+#if defined(TIM7_BASE)
+       case (uint32_t)TIM7:
+         IRQn = TIM7_IRQn;
+         break;
+#endif
+#if defined(TIM8_BASE)
+       case (uint32_t)TIM8:
+         IRQn = TIM8_IRQn;
+         break;
+#endif
+#if defined(TIM9_BASE)
+       case (uint32_t)TIM9:
+         IRQn = TIM9_IRQn;
+         break;
+#endif
+#if defined(TIM10_BASE)
+       case (uint32_t)TIM10:
+         IRQn = TIM10_IRQn;
+         break;
+#endif
+#if defined(TIM11_BASE)
+       case (uint32_t)TIM11:
+         IRQn = TIM11_IRQn;
+         break;
+#endif
+#if defined(TIM12_BASE)
+       case (uint32_t)TIM12:
+         IRQn = TIM12_IRQn;
+         break;
+#endif
+#if defined(TIM13_BASE)
+       case (uint32_t)TIM13:
+         IRQn = TIM13_IRQn;
+         break;
+#endif
+#if defined(TIM14_BASE)
+       case (uint32_t)TIM14:
+         IRQn = TIM14_IRQn;
+         break;
+#endif
+#if defined(TIM15_BASE)
+       case (uint32_t)TIM15:
+         IRQn = TIM15_IRQn;
+         break;
+#endif
+#if defined(TIM16_BASE)
+       case (uint32_t)TIM16:
+         IRQn = TIM16_IRQn;
+         break;
+#endif
+#if defined(TIM17_BASE)
+       case (uint32_t)TIM17:
+         IRQn = TIM17_IRQn;
+         break;
+#endif
+#if defined(TIM18_BASE)
+       case (uint32_t)TIM18:
+         IRQn = TIM18_IRQn;
+         break;
+#endif
+#if defined(TIM19_BASE)
+       case (uint32_t)TIM19:
+         IRQn = TIM19_IRQn;
+         break;
+#endif
+#if defined(TIM20_BASE)
+       case (uint32_t)TIM20:
+         IRQn = TIM20_IRQn;
+         break;
+#endif
+#if defined(TIM21_BASE)
+       case (uint32_t)TIM21:
+         IRQn = TIM21_IRQn;
+         break;
+#endif
+#if defined(TIM22_BASE)
+       case (uint32_t)TIM22:
+         IRQn = TIM22_IRQn;
+         break;
+#endif
+         break;
+     default:
+        printf("TIM: Unknown timer IRQn");
+        break;
+    }
+  }
+  return IRQn;
 }
 
 /**
@@ -421,7 +569,93 @@ void TimerHandleDeinit(stimer_t *obj)
   */
 uint8_t getTimerClkSrc(TIM_TypeDef* tim)
 {
-  return (uint8_t)timermap_clkSrc(tim, TimerMap_CONFIG);
+  uint8_t clkSrc = 0;
+
+  if(tim != (TIM_TypeDef *)NC)
+#ifdef STM32F0xx
+    /* TIMx source CLK is PCKL1 */
+    clkSrc = 1;
+#else
+  {
+    /* Get source clock depending on TIM instance */
+    switch ((uint32_t)tim) {
+#if defined(TIM2_BASE)
+       case (uint32_t)TIM2:
+#endif
+#if defined(TIM3_BASE)
+       case (uint32_t)TIM3:
+#endif
+#if defined(TIM4_BASE)
+       case (uint32_t)TIM4:
+#endif
+#if defined(TIM5_BASE)
+       case (uint32_t)TIM5:
+#endif
+#if defined(TIM6_BASE)
+       case (uint32_t)TIM6:
+#endif
+#if defined(TIM7_BASE)
+       case (uint32_t)TIM7:
+#endif
+#if defined(TIM12_BASE)
+       case (uint32_t)TIM12:
+#endif
+#if defined(TIM13_BASE)
+       case (uint32_t)TIM13:
+#endif
+#if defined(TIM14_BASE)
+       case (uint32_t)TIM14:
+#endif
+#if defined(TIM18_BASE)
+       case (uint32_t)TIM18:
+#endif
+         clkSrc = 1;
+         break;
+#if defined(TIM1_BASE)
+       case (uint32_t)TIM1:
+#endif
+#if defined(TIM8_BASE)
+       case (uint32_t)TIM8:
+#endif
+#if defined(TIM9_BASE)
+       case (uint32_t)TIM9:
+#endif
+#if defined(TIM10_BASE)
+       case (uint32_t)TIM10:
+#endif
+#if defined(TIM11_BASE)
+       case (uint32_t)TIM11:
+#endif
+#if defined(TIM15_BASE)
+       case (uint32_t)TIM15:
+#endif
+#if defined(TIM16_BASE)
+       case (uint32_t)TIM16:
+#endif
+#if defined(TIM17_BASE)
+       case (uint32_t)TIM17:
+#endif
+#if defined(TIM19_BASE)
+       case (uint32_t)TIM19:
+#endif
+#if defined(TIM20_BASE)
+       case (uint32_t)TIM20:
+#endif
+#if defined(TIM21_BASE)
+       case (uint32_t)TIM21:
+#endif
+#if defined(TIM22_BASE)
+       case (uint32_t)TIM22:
+#endif
+         clkSrc = 2;
+         break;
+     default:
+        printf("TIM: Unknown timer instance");
+        break;
+    }
+  }
+#endif
+  return clkSrc;
 }
 
 /**
@@ -433,7 +667,7 @@ uint32_t getTimerClkFreq(TIM_TypeDef* tim)
 {
   RCC_ClkInitTypeDef    clkconfig = {};
   uint32_t              pFLatency = 0U;
-  uint32_t              uwTimclock, uwAPBxPrescaler = 0U;
+  uint32_t              uwTimclock = 0U, uwAPBxPrescaler = 0U;
 
   /* Get clock configuration */
   HAL_RCC_GetClockConfig(&clkconfig, &pFLatency);
@@ -450,6 +684,7 @@ uint32_t getTimerClkFreq(TIM_TypeDef* tim)
 #endif
     default:
     case 0:
+      printf("TIM: Unknown clock source");
       break;
   }
 /* When TIMPRE bit of the RCC_DCKCFGR register is reset,
@@ -517,7 +752,7 @@ void TimerPulseInit(stimer_t *obj, uint16_t period, uint16_t pulseWidth, void (*
   handle->Init.Prescaler         = (uint32_t)(getTimerClkFreq(obj->timer) / (1000000)) - 1;
   handle->Init.ClockDivision     = 0;
   handle->Init.CounterMode       = TIM_COUNTERMODE_UP;
-#ifndef STM32L0xx
+#if !defined(STM32L0xx) && !defined(STM32L1xx)
   handle->Init.RepetitionCounter = 0;
 #endif
   obj->irqHandleOC = irqHandle;
@@ -526,13 +761,13 @@ void TimerPulseInit(stimer_t *obj, uint16_t period, uint16_t pulseWidth, void (*
   sConfig.Pulse         = pulseWidth;
   sConfig.OCPolarity    = TIM_OCPOLARITY_HIGH;
   sConfig.OCFastMode    = TIM_OCFAST_DISABLE;
-#ifndef STM32L0xx
+#if !defined(STM32L0xx) && !defined(STM32L1xx)
   sConfig.OCNPolarity   = TIM_OCNPOLARITY_HIGH;
   sConfig.OCIdleState   = TIM_OCIDLESTATE_RESET;
   sConfig.OCNIdleState  = TIM_OCNIDLESTATE_RESET;
 #endif
-  HAL_NVIC_SetPriority(timermap_irq(obj->timer, TimerMap_CONFIG), 14, 0);
-  HAL_NVIC_EnableIRQ(timermap_irq(obj->timer, TimerMap_CONFIG));
+  HAL_NVIC_SetPriority(getTimerIrq(obj->timer), 14, 0);
+  HAL_NVIC_EnableIRQ(getTimerIrq(obj->timer));
 
   if(HAL_TIM_OC_Init(handle) != HAL_OK) return;
 
@@ -551,7 +786,7 @@ void TimerPulseDeinit(stimer_t *obj)
 
   obj->irqHandleOC = NULL;
 
-  HAL_NVIC_DisableIRQ(timermap_irq(obj->timer, TimerMap_CONFIG));
+  HAL_NVIC_DisableIRQ(getTimerIrq(obj->timer));
 
   if(HAL_TIM_OC_DeInit(handle) != HAL_OK) return;
   if(HAL_TIM_OC_Stop_IT(handle, TIM_CHANNEL_1) != HAL_OK) return;
@@ -789,69 +1024,39 @@ void attachIntHandle(stimer_t *obj, void (*irqHandle)(stimer_t *))
 /*                            TIMx IRQ HANDLER                                */
 /******************************************************************************/
 
+#if defined(TIM1_BASE)
 /**
-  * @brief  TIM1 & TIM10 irq handler
+  * @brief  TIM1 IRQHandler common with TIM10 and TIM16 on some STM32F1xx
   * @param  None
   * @retval None
   */
-void TIM1_UP_TIM10_IRQHandler(void)
+void TIM1_IRQHandler(void)
 {
   if(timer_handles[0] != NULL) {
     HAL_TIM_IRQHandler(timer_handles[0]);
   }
 
+#if defined(STM32F1xx) || defined(STM32F2xx) || defined(STM32F4xx) || defined(STM32F7xx)
+#if defined (TIM10_BASE)
   if(timer_handles[9] != NULL) {
     HAL_TIM_IRQHandler(timer_handles[9]);
   }
+#endif
+#endif
+
+#if defined(STM32F1xx) || defined(STM32F3xx) || defined(STM32L4xx)
+#if defined (TIM16_BASE)
+  if(timer_handles[15] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[15]);
+  }
+#endif
+#endif
 }
+#endif //TIM1_BASE
 
-
+#if defined(TIM2_BASE)
 /**
-  * @brief  TIM1 & TIM9 irq handler
-  * @param  None
-  * @retval None
-  */
-void TIM1_BRK_TIM9_IRQHandler(void)
-{
-  if(timer_handles[0] != NULL) {
-    HAL_TIM_IRQHandler(timer_handles[0]);
-  }
-
-  if(timer_handles[8] != NULL) {
-    HAL_TIM_IRQHandler(timer_handles[8]);
-  }
-}
-
-/**
-  * @brief  TIM1 & TIM11 irq handler
-  * @param  None
-  * @retval None
-  */
-void TIM1_TRG_COM_TIM11_IRQHandler(void)
-{
-  if(timer_handles[0] != NULL) {
-    HAL_TIM_IRQHandler(timer_handles[0]);
-  }
-
-  if(timer_handles[10] != NULL) {
-    HAL_TIM_IRQHandler(timer_handles[10]);
-  }
-}
-
-/**
-  * @brief  TIM1 irq handler
-  * @param  None
-  * @retval None
-  */
-void TIM1_CC_IRQHandler(void)
-{
-  if(timer_handles[0] != NULL) {
-    HAL_TIM_IRQHandler(timer_handles[0]);
-  }
-}
-
-/**
-  * @brief  TIM2 irq handler
+  * @brief  TIM2 IRQHandler
   * @param  None
   * @retval None
   */
@@ -861,9 +1066,11 @@ void TIM2_IRQHandler(void)
     HAL_TIM_IRQHandler(timer_handles[1]);
   }
 }
+#endif //TIM2_BASE
 
+#if defined(TIM3_BASE)
 /**
-  * @brief  TIM3 irq handler
+  * @brief  TIM3 IRQHandler
   * @param  None
   * @retval None
   */
@@ -873,9 +1080,11 @@ void TIM3_IRQHandler(void)
     HAL_TIM_IRQHandler(timer_handles[2]);
   }
 }
+#endif //TIM3_BASE
 
+#if defined(TIM4_BASE)
 /**
-  * @brief  TIM4 irq handler
+  * @brief  TIM4 IRQHandler
   * @param  None
   * @retval None
   */
@@ -885,9 +1094,11 @@ void TIM4_IRQHandler(void)
     HAL_TIM_IRQHandler(timer_handles[3]);
   }
 }
+#endif //TIM4_BASE
 
+#if defined(TIM5_BASE)
 /**
-  * @brief  TIM5 irq handler
+  * @brief  TIM5 IRQHandler
   * @param  None
   * @retval None
   */
@@ -897,21 +1108,25 @@ void TIM5_IRQHandler(void)
     HAL_TIM_IRQHandler(timer_handles[4]);
   }
 }
+#endif //TIM5_BASE
 
+#if defined(TIM6_BASE)
 /**
-  * @brief  TIM6 irq handler
+  * @brief  TIM6 IRQHandler
   * @param  None
   * @retval None
   */
-void TIM6_DAC_IRQHandler(void)
+void TIM6_IRQHandler(void)
 {
   if(timer_handles[5] != NULL) {
     HAL_TIM_IRQHandler(timer_handles[5]);
   }
 }
+#endif //TIM6_BASE
 
+#if defined(TIM7_BASE)
 /**
-  * @brief  TIM7 irq handler
+  * @brief  TIM7 IRQHandler
   * @param  None
   * @retval None
   */
@@ -921,67 +1136,229 @@ void TIM7_IRQHandler(void)
     HAL_TIM_IRQHandler(timer_handles[6]);
   }
 }
+#endif //TIM7_BASE
 
+#if defined(TIM8_BASE)
 /**
-  * @brief  TIM8 & TIM13 irq handler
+  * @brief  TIM8 IRQHandler
   * @param  None
   * @retval None
   */
-void TIM8_UP_TIM13_IRQHandler(void)
+void TIM8_IRQHandler(void)
 {
   if(timer_handles[7] != NULL) {
     HAL_TIM_IRQHandler(timer_handles[7]);
   }
 
+#if defined(STM32F1xx) || defined(STM32F2xx) ||defined(STM32F4xx) || defined(STM32F7xx)
   if(timer_handles[12] != NULL) {
     HAL_TIM_IRQHandler(timer_handles[12]);
   }
+#endif
 }
+#endif //TIM8_BASE
 
-
+#if defined(TIM9_BASE)
 /**
-  * @brief  TIM8 & TIM12 irq handler
+  * @brief  TIM9 IRQHandler
   * @param  None
   * @retval None
   */
-void TIM8_BRK_TIM12_IRQHandler(void)
+void TIM9_IRQHandler(void)
 {
-  if(timer_handles[7] != NULL) {
-    HAL_TIM_IRQHandler(timer_handles[7]);
+  if(timer_handles[8] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[8]);
   }
+}
+#endif //TIM9_BASE
 
+#if defined(TIM10_BASE)
+#if !defined(STM32F1xx) && !defined(STM32F2xx) && !defined(STM32F4xx) && !defined(STM32F7xx)
+/**
+  * @brief  TIM10 IRQHandler
+  * @param  None
+  * @retval None
+  */
+void TIM10_IRQHandler(void)
+{
+  if(timer_handles[9] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[9]);
+  }
+}
+#endif
+#endif //TIM10_BASE
+
+#if defined(TIM11_BASE)
+/**
+  * @brief  TIM11 IRQHandler
+  * @param  None
+  * @retval None
+  */
+void TIM11_IRQHandler(void)
+{
+  if(timer_handles[10] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[10]);
+  }
+}
+#endif //TIM11_BASE
+
+#if defined(TIM12_BASE)
+/**
+  * @brief  TIM12 IRQHandler
+  * @param  None
+  * @retval None
+  */
+void TIM12_IRQHandler(void)
+{
   if(timer_handles[11] != NULL) {
     HAL_TIM_IRQHandler(timer_handles[11]);
   }
 }
+#endif //TIM12_BASE
 
+#if defined(TIM13_BASE)
+#if !defined(STM32F1xx) && !defined(STM32F2xx) && !defined(STM32F4xx) && !defined(STM32F7xx)
 /**
-  * @brief  TIM8 & TIM14 irq handler
+  * @brief  TIM13 IRQHandler
   * @param  None
   * @retval None
   */
-void TIM8_TRG_COM_TIM14_IRQHandler(void)
+void TIM13_IRQHandler(void)
 {
-  if(timer_handles[7] != NULL) {
-    HAL_TIM_IRQHandler(timer_handles[7]);
+  if(timer_handles[12] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[12]);
   }
+}
+#endif
+#endif //TIM13_BASE
 
+#if defined(TIM14_BASE)
+/**
+  * @brief  TIM14 IRQHandler
+  * @param  None
+  * @retval None
+  */
+void TIM14_IRQHandler(void)
+{
   if(timer_handles[13] != NULL) {
     HAL_TIM_IRQHandler(timer_handles[13]);
   }
 }
+#endif //TIM14_BASE
 
+#if defined(TIM15_BASE)
 /**
-  * @brief  TIM8 irq handler
+  * @brief  TIM15 IRQHandler
   * @param  None
   * @retval None
   */
-void TIM8_CC_IRQHandler(void)
+void TIM15_IRQHandler(void)
 {
-  if(timer_handles[7] != NULL) {
-    HAL_TIM_IRQHandler(timer_handles[7]);
+  if(timer_handles[14] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[14]);
   }
 }
+#endif //TIM15_BASE
+
+#if defined(TIM16_BASE)
+#if !defined(STM32F1xx) && !defined(STM32F3xx) && !defined(STM32L4xx)
+/**
+  * @brief  TIM16 IRQHandler
+  * @param  None
+  * @retval None
+  */
+void TIM16_IRQHandler(void)
+{
+  if(timer_handles[15] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[15]);
+  }
+}
+#endif
+#endif //TIM16_BASE
+
+#if defined(TIM17_BASE)
+/**
+  * @brief  TIM17 IRQHandler
+  * @param  None
+  * @retval None
+  */
+void TIM17_IRQHandler(void)
+{
+  if(timer_handles[16] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[16]);
+  }
+}
+#endif //TIM17_BASE
+
+#if defined(TIM18_BASE)
+/**
+  * @brief  TIM18 IRQHandler
+  * @param  None
+  * @retval None
+  */
+void TIM18_IRQHandler(void)
+{
+  if(timer_handles[17] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[17]);
+  }
+}
+#endif //TIM18_BASE
+
+#if defined(TIM19_BASE)
+/**
+  * @brief  TIM19 IRQHandler
+  * @param  None
+  * @retval None
+  */
+void TIM19_IRQHandler(void)
+{
+  if(timer_handles[18] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[18]);
+  }
+}
+#endif //TIM19_BASE
+
+#if defined(TIM20_BASE)
+/**
+  * @brief  TIM20 IRQHandler
+  * @param  None
+  * @retval None
+  */
+void TIM20_IRQHandler(void)
+{
+  if(timer_handles[19] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[19]);
+  }
+}
+#endif //TIM20_BASE
+
+#if defined(TIM21_BASE)
+/**
+  * @brief  TIM21 IRQHandler
+  * @param  None
+  * @retval None
+  */
+void TIM21_IRQHandler(void)
+{
+  if(timer_handles[20] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[20]);
+  }
+}
+#endif //TIM21_BASE
+
+#if defined(TIM22_BASE)
+/**
+  * @brief  TIM22 IRQHandler
+  * @param  None
+  * @retval None
+  */
+void TIM22_IRQHandler(void)
+{
+  if(timer_handles[21] != NULL) {
+    HAL_TIM_IRQHandler(timer_handles[21]);
+  }
+}
+#endif //TIM22_BASE
 
 /**
   * @}

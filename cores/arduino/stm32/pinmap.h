@@ -27,29 +27,27 @@
 extern "C" {
 #endif
 
-typedef struct {
-    PinName pin;
-    int peripheral;
-    int function;
-} PinMap;
+// No peripheral
+#define NP       0U
 
 typedef struct {
-  TIM_TypeDef *timer;
-  IRQn_Type irq;
-  uint8_t clk_src;
-} TimerMap;
+    PinName pin;
+    void* peripheral;
+    int function;
+} PinMap;
 
 bool pin_in_pinmap(PinName pin, const PinMap* map);
 void pin_function(PinName pin, int function);
 
-uint32_t pinmap_peripheral(PinName pin, const PinMap* map);
-uint32_t pinmap_function(PinName pin, const PinMap* map);
-uint32_t pinmap_find_peripheral(PinName pin, const PinMap* map);
-uint32_t pinmap_find_function(PinName pin, const PinMap* map);
-uint32_t pinmap_merge(uint32_t a, uint32_t b);
+PinName pin_pinName(const PinMap* map);
 
-uint32_t timermap_irq(TIM_TypeDef *tim, const TimerMap* map);
-uint32_t timermap_clkSrc(TIM_TypeDef *tim, const TimerMap* map);
+void* pinmap_find_peripheral(PinName pin, const PinMap* map);
+void* pinmap_peripheral(PinName pin, const PinMap* map);
+PinName pinmap_find_pin(void* peripheral, const PinMap* map);
+PinName pinmap_pin(void* peripheral, const PinMap* map);
+uint32_t pinmap_find_function(PinName pin, const PinMap* map);
+uint32_t pinmap_function(PinName pin, const PinMap* map);
+void* pinmap_merge_peripheral(void* a, void* b);
 
 #ifdef __cplusplus
 }
